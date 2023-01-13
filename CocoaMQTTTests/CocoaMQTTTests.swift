@@ -8,9 +8,6 @@
 
 import XCTest
 @testable import CocoaMQTT
-#if IS_SWIFT_PACKAGE
-@testable import CocoaMQTTWebSocket
-#endif
 
 private let host = "localhost"
 private let port: UInt16 = 1883
@@ -86,101 +83,6 @@ class CocoaMQTTTests: XCTestCase {
 
     }
     
-    // This is a basic test of the websocket authentication used by AWS IoT Custom Authorizers
-    // https://docs.aws.amazon.com/iot/latest/developerguide/custom-authorizer.html
-    func testWebsocketAuthConnect() {
-        return // Fix to have the test pass in case the AWS IoT endpoint has not been setup
-        let caller = Caller()
-        let websocket = CocoaMQTTWebSocket(uri: "/mqtt")
-        websocket.headers = [
-            "x-amz-customauthorizer-name": "tokenAuthorizer",
-            "x-amz-customauthorizer-signature": "qnQ+T1i2ahSuispDMbjBPn/bN91jDpOmiRAVfTqfXTVvrEP6mNroYJLeVm6vrCp0dODgoiNYKWjwXANuseVafMALL18rMVyQOCaRTStI7xh/pFKVtnK+pdJroPto8ElJhia4cfETwmCdHq7rXLUqdvUGFiVh4+67M5R6088bfhZnjwjgcvhvG8mpTo2yONOkqDK9eA9XZcJhjrURF8DHsPrpIjIihYHq7LdsL5nFJ9FM11mA2AUj51fHZHO7uOfegprFgIeI32Tcn5KEWEDGrD3shvOrqUtDuodrfkALGtNjpGdWNOp/8XKK19KsbUJJrMaH6CDk3j6pn7S1lilz2Q==",
-            "token": "3c7a880d-0868-40dc-8183-8870323803fa",
-            "Sec-WebSocket-Protocol": "mqttv3.1",
-        ]
-        websocket.enableSSL = true
-        let mqtt = CocoaMQTT(clientID: clientID, host: "XXXXXXXXXXXX-ats.iot.eu-west-1.amazonaws.com", port: 443, socket: websocket)
-        mqtt.delegateQueue = deleQueue
-        mqtt.delegate = caller
-        mqtt.logLevel = .error
-        mqtt.autoReconnect = false
-        _ = mqtt.connect()
-        wait_for { caller.isConnected }
-        XCTAssertEqual(mqtt.connState, .connected)
-        let topic = "d/AADDS"
-        mqtt.subscribe(topic)
-        wait_for {
-            if caller.subs.count >= 1 {
-                if caller.subs[0] == topic {
-                    return true
-                }
-            }
-            return false
-        }
-        mqtt.publish(topic, withString: "0", qos: .qos0, retained: false)
-        wait_for {
-            if caller.recvs.count >= 1 {
-                let f = caller.recvs[0]
-                XCTAssertEqual(f.topic, topic)
-                return true
-            }
-            return false
-        }
-    }
-    
-    func testWebsocketConnect() {
-        let caller = Caller()
-        let websocket = CocoaMQTTWebSocket(uri: "/mqtt")
-        let mqtt = CocoaMQTT(clientID: clientID, host: host, port: 8083, socket: websocket)
-        mqtt.delegateQueue = deleQueue
-        mqtt.delegate = caller
-        mqtt.logLevel = .error
-        mqtt.autoReconnect = false
-        //mqtt.enableSSL = true
-
-        _ = mqtt.connect()
-        wait_for { caller.isConnected }
-        XCTAssertEqual(mqtt.connState, .connected)
-
-        let topics = ["t/0", "t/1", "t/2"]
-
-        mqtt.subscribe(topics[0])
-        mqtt.subscribe(topics[1])
-        mqtt.subscribe(topics[2])
-        wait_for {
-            caller.subs == topics
-        }
-
-        mqtt.publish(topics[0], withString: "0", qos: .qos0, retained: false)
-        mqtt.publish(topics[1], withString: "1", qos: .qos1, retained: false)
-        mqtt.publish(topics[2], withString: "2", qos: .qos2, retained: false)
-        wait_for {
-            if caller.recvs.count >= 3 {
-                let f0 = caller.recvs[0]
-                let f1 = caller.recvs[1]
-                let f2 = caller.recvs[2]
-                XCTAssertEqual(f0.topic, topics[0])
-                XCTAssertEqual(f1.topic, topics[1])
-                XCTAssertEqual(f2.topic, topics[2])
-                return true
-            }
-            return false
-        }
-        
-        mqtt.unsubscribe(topics[0])
-        mqtt.unsubscribe(topics[1])
-        mqtt.unsubscribe(topics[2])
-        wait_for {
-            caller.subs == []
-        }
-
-        mqtt.disconnect()
-        wait_for {
-            caller.isConnected == false
-        }
-        XCTAssertEqual(mqtt.connState, .disconnected)
-   }
-
     func testAutoReconnect() {
         let caller = Caller()
         let mqtt = CocoaMQTT(clientID: clientID, host: host, port: port)

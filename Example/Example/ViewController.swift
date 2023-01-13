@@ -78,7 +78,6 @@ class ViewController: UIViewController {
         //selfSignedSSLSetting()
         //simpleSSLSetting()
         //mqttWebsocketsSetting()
-        //mqttWebsocketSSLSetting()
     }
 
 
@@ -213,88 +212,6 @@ class ViewController: UIViewController {
             mqtt5!.sslSettings = sslSettings
 
         }
-
-    }
-    
-    func mqttWebsocketsSetting() {
-        if mqttVesion == "3.1.1" {
-
-            let clientID = "CocoaMQTT-\(animal!)-" + String(ProcessInfo().processIdentifier)
-            let websocket = CocoaMQTTWebSocket(uri: "/mqtt")
-            mqtt = CocoaMQTT(clientID: clientID, host: defaultHost, port: 8083, socket: websocket)
-            mqtt!.username = ""
-            mqtt!.password = ""
-            mqtt!.willMessage = CocoaMQTTMessage(topic: "/will", string: "dieout")
-            mqtt!.keepAlive = 60
-            mqtt!.delegate = self
-
-        }else if mqttVesion == "5.0" {
-
-            let clientID = "CocoaMQTT5-\(animal!)-" + String(ProcessInfo().processIdentifier)
-            let websocket = CocoaMQTTWebSocket(uri: "/mqtt")
-            mqtt5 = CocoaMQTT5(clientID: clientID, host: defaultHost, port: 8083, socket: websocket)
-
-            let connectProperties = MqttConnectProperties()
-            connectProperties.topicAliasMaximum = 0
-            connectProperties.sessionExpiryInterval = 0
-            connectProperties.receiveMaximum = 100
-            connectProperties.maximumPacketSize = 500
-
-            mqtt5!.connectProperties = connectProperties
-
-            mqtt5!.username = ""
-            mqtt5!.password = ""
-
-            let lastWillMessage = CocoaMQTT5Message(topic: "/will", string: "dieout")
-            lastWillMessage.contentType = "JSON"
-            lastWillMessage.willExpiryInterval = .max
-            lastWillMessage.willDelayInterval = 0
-            lastWillMessage.qos = .qos1
-
-            mqtt5!.willMessage = lastWillMessage
-            mqtt5!.keepAlive = 60
-            mqtt5!.delegate = self
-
-        }
-
-    }
-    
-    func mqttWebsocketSSLSetting() {
-        if mqttVesion == "3.1.1" {
-
-            let clientID = "CocoaMQTT-\(animal!)-" + String(ProcessInfo().processIdentifier)
-            let websocket = CocoaMQTTWebSocket(uri: "/mqtt")
-            mqtt = CocoaMQTT(clientID: clientID, host: defaultHost, port: 8084, socket: websocket)
-            mqtt!.enableSSL = true
-            mqtt!.username = ""
-            mqtt!.password = ""
-            mqtt!.willMessage = CocoaMQTTMessage(topic: "/will", string: "dieout")
-            mqtt!.keepAlive = 60
-            mqtt!.delegate = self
-
-        }else if mqttVesion == "5.0" {
-
-            let clientID = "CocoaMQTT5-\(animal!)-" + String(ProcessInfo().processIdentifier)
-            let websocket = CocoaMQTTWebSocket(uri: "/mqtt")
-            mqtt5 = CocoaMQTT5(clientID: clientID, host: defaultHost, port: 8084, socket: websocket)
-
-            let connectProperties = MqttConnectProperties()
-            connectProperties.topicAliasMaximum = 0
-            connectProperties.sessionExpiryInterval = 0
-            connectProperties.receiveMaximum = 100
-            connectProperties.maximumPacketSize = 500
-
-            mqtt5!.connectProperties = connectProperties
-
-            mqtt5!.enableSSL = true
-            mqtt5!.username = ""
-            mqtt5!.password = ""
-            mqtt5!.willMessage = CocoaMQTT5Message(topic: "/will", string: "dieout")
-            mqtt5!.keepAlive = 60
-            mqtt5!.delegate = self
-
-        }
-
 
     }
     
